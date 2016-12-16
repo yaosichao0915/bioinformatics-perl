@@ -1,0 +1,460 @@
+
+sort_contigs - Sort contigs in an input fasta sequence file, possibly with
+an accompanying fasta quality file.  Contigs are left unsorted, if a sort
+order is not specified.
+
+NOTE: If you do NOT need to change the order of the output contigs,
+(using options -a, -b, -n, -o order_file, -S, or, -z) or join output
+contigs as one contig (option -j join_char), then the program
+select_contigs may be a better choice and run faster, especially for
+large input files.
+
+If none of -a, -b, -n, -o, or -z is specified, the output contig order
+matches the input order.  If -a or -n is specified, then the contigs are
+sorted by contig name either alphanumerically (-a) or numerically (-n).
+If -z is specified, then the contigs are sorted by contig size.  If -o
+is specified, then the contigs are output in the order specified by the
+lines in 'order_file', and only the contigs named in 'order_file' are
+output.  If -o is not specified, then all input contigs are output.  If
+-b is specified, then the order of contigs to be output is backwards from
+what it would otherwise be;  this applies whether -a, -n, -o, -z, or none
+of these is specified.  Contigs shorter than 'min_size' bases long are
+discarded.
+
+If -j is specified, then all of the contigs are joined with sequences of
+'join_char's and output as a single contig, and a table-of-contents file
+named 'fasta_output_file'.toc is also created.  If -j is not requested,
+the contigs are output as separate contigs.
+
+The contig names optionally may be shortened by removing everything before
+the word "Contig" (-s).
+
+Contig header comments, located after the contig name on the contig header
+line, will be removed, but new comments may be added if partial contigs
+are requested in 'order_file'.  If '-p' is specified, then the original
+contig header comments will be added back to the contig header (possibly
+after any added comments describing partial contigs).  All output lines
+containing sequence bases (not contig headers) are reformatted to be
+'output_line_length' bases long, with the exception that contig separator
+sequences (specified by -j) are output on separate output lines.
+
+If '-u' is specified, then universal accession numbers (uaccno) are
+used as contig names for 454 reads instead of the rank_x_y form
+normally present in 454Reads files.  The uaccnos will be used in the
+output contigs and in any order files used to select contigs.  The '-p'
+flag may not be used with '-u'.
+
+If '-q' is specified, then a fasta quality file named
+"'fasta_input_file'.qual" also is processed, creating an additional
+output fasta quality file named "'fasta_output_file'.qual".  If
+'-t type_to_remove' is also specified, then the 'type_to_remove' is
+removed from the end of 'fasta_output_file' before adding ".qual".
+
+All output contigs may be reversed and complemented if requested (-r), or
+on an individual basis as specified on each line in the 'order_file' (-o).
+Both -r and -o may not be specified together.
+
+
+USAGE: sort_contigs [-o order_file / -a / -n / -S / -z] [-b]
+	    [-c contig_prefix] [-d] [-e] [-g] [-j join_char]
+	    [-l output_line_length] [-m min_size] [-M max_qual] [-p]
+	    [-q] [-Q qual_value] [-r] [-s] [-t type_to_remove] [-u]
+	    [-v] [-x] fasta_input_file fasta_output_file
+              or
+       sort_contigs -h           <== What you are reading
+
+  where 'order_file' is the name of an input file containing the output
+            ordering for the contigs.
+
+        'join_char' - The output contigs are joined together and output as
+            a single contig, named the same as the input sequence file,
+            'fasta_input_file'.  If a single character is specified for
+            'join_char', then each pair of input contigs will be separated
+            by 50 'join_char's.  If a multi-character string is
+            specified, then that string will be used as the separator
+            without duplication.  If '-j' is not specified, the contigs
+            are output as separate contigs.
+
+        'output_line_length' is the length of the output lines containing
+            sequence data (not sequence headers).  The default value is 50.
+            'output_line_length' must be greater or equal to 10.
+
+        'max_qual' is the maximum allowed quality value for all bases
+            in the output file.  Any bases with a quality value higher
+            than 'maximum_quality_value' will have the quality lowered to
+            'maximum_quality_value'.  'max_qual' must be a one- or
+	    two-digit positive integer.  The default value is 99.
+
+	'min_size' is the minimum contig length to be used.  Shorter
+	    contigs are discarded.  The default value is 1.
+
+        'qual_value' is one of the following:
+
+            (1) '#' - a one- or two-digit integer constant quality
+	      value to be applied to all bases in the phd file.  If
+	      this is specified, then an input Fasta quality file is
+	      not used;  or
+
+            (2) 'SUB#' - the word 'SUB' followed by a one- or
+	      two-digit integer which is to be subtracted from all
+	      scores from the input Fasta quality file;  or
+
+            (3) 'DIV#.###' - the word 'DIV' followed by an integer or
+	      real number (>= 1 and < 10), by which all of the quality
+	      scores from the input Fasta quality file are to be
+	      divided;  or
+
+            (4) 'STEP#,#,...' - the word 'STEP' followed by a
+	      comma-separated list of integers representing segment
+	      lengths of bases.  This format divides input quality
+	      scores by a divisor like the DIV format above, except
+	      that the divisor is variable.  Each number gives the
+	      number of base quality scores that are to be divided by
+	      the same divisor.  The first number gives the number of
+	      bases to be divided by 1; then the second number of base
+	      qualities are to be divided by 2;  then 3;  etc.;  or
+
+            (5) 'SLOPE#,#,...' - the word 'SLOPE' followed by a
+	      comma-separated list of integers representing segment
+	      lengths of bases.  This format divides input quality
+	      scores by a divisor like the DIV format above, except
+	      that the divisor is variable.  Each number gives the
+	      number of base quality scores that are to be divided by
+	      a set of divisors.  The first number gives the number of
+	      base qualities to be divided by 1;  then the second
+	      number of base qualities are to be divided by a linearly
+	      interpolated set of divisors sloping from 1 to 2;  then
+	      2 to 3;  then 3 to 4;  etc.  After the last segment, all
+	      the rest of the base qualities are divided by the number
+	      of segments.
+
+            Only one of these forms may be used at a time.  If a
+	    negative base quality score results, then that value is
+	    replaced by zero.  When base quality scores are divided,
+	    the resulting quotient is rounded down to the next lowest
+	    integer.
+
+	'type_to_remove' is a filetype to be removed before adding
+	    ".qual" to create the output quality filename.  If the
+	    filetype is not present, then no error or warning is
+	    given.  Note:  you need to include the leading period for
+	    the type to remove (e.g., '.fna').  The default type to be
+	    removed is ''.
+
+        'fasta_input_file' is the name of the input sequence file in Fasta
+            format, which contains the contigs to be processed.  If
+            'fasta_input_file' is specified as '-', then standard input
+            is used.  If '-q' is specified, then 'fasta_input_file' may
+            not be specified as '-'.
+
+        'fasta_output_file' is the name of the output sequence file in
+            Fasta format.  If 'fasta_output_file' is specified as '-',
+            then standard output is used.  If '-j' or '-q' is specified,
+            then 'fasta_output_file' may not be specified as '-'.
+
+OPTIONS:
+
+  -a  Sort input contigs in alphanumeric order by contig name.  May be
+      modified by -b.  May not be used with -n, -o, -S, or -z.
+
+  -b  Output the list of contigs in backwards order.
+
+  -c  Contig prefix to be added to output contig names.  The prefix is
+      added after possible shortening by -s.  May not be used with -j
+      or -o.
+
+  -d  Input contigs are assumed to be dna.  Filter out any degenerate
+      contigs that do not contain at least one each of A, C, G, and T.
+
+  -e  Emtpy output files are OK and do not result in an error.  If -e
+      is not specified, and the input file is empty or an order file
+      selects no contigs, then the program normally exits with an
+      error.
+
+  -j  Join contigs into a single contig, named the same as the
+      'fasta_input_file'.  In addition, a table of contents file,
+      'fasta_output_file'.toc, is created.  If both -j and -o are specified,
+      then the output_contig_name fields in the order file are not used.
+      May not be used with -c or -x.
+
+  -l  Specify output line length.
+
+  -m  Specify minimum contig length to be used.
+
+  -M  Specify a maximum quality score for all bases in the output
+      quality file.
+
+  -n  Sort input contigs in numeric order by contig name.  May be modified
+      by -b.  The program searches each contig name and looks for the last
+      string of numeric characters within the contig name.  May not be
+      used with -a, -o, -S, or -z.
+
+  -o  Specifies the name of an 'order_file', which contains a list of
+      contig names to be output.  Each line of 'order_file' is a
+      white-space separated list of one or more fields.  The fields in
+      the list are:  input_contig_name, direction, begin_base, length,
+      and output_contig_name.  The fields present may be followed by a
+      comment, which begins with a '#' character after a white space
+      character and runs to the end of the line.  May be modified by
+      -b.  May not be used with -a, -c, -n, -r, -S, or -z.  If both -j
+      and -o are specified, then the output_contig_name fields in the
+      order file are not used.
+
+  -p  Preserve contig header comments.  May not be used with -u.
+
+  -q  Also process a fasta quality file, "'fasta_input_file'.qual", as well
+      as the sequence file and create an output quality file,
+      "'fasta_output_file'.qual", in addition to the output sequence file.
+      sort_contigs also allows relaxed quality file naming.  If
+      "'fasta_input_file'.qual" is not found, and 'fasta_input_file' is of
+      the form "xxx.fa", "xxx.fna", or "xxx.fasta", then sort_contigs
+      will try to use "xxx.qual" instead.
+
+  -Q  Specify a constant quality value to be applied to all bases in
+      the output quality file or a modifier to be applied to all
+      qualities from the input Fasta quality file.  If 'qual_value' is
+      a simple one- or two-digit positive integer, then that value is
+      used for the quality scores and the input Fasta quality file is
+      not needed.  If 'qual_value' is not just a simple one- or
+      two-digit integer, then it specifies a modifier to be applied to
+      the values from the input Fasta quality file.  See the
+      dexription of 'qual_value' above.
+
+  -r  Each output contig is to be reversed and complemented.  May not be
+      used with -o.
+
+  -s  The contig name may be shortened by removing any prefix before the
+      word "Contig", i.e., "gono.fasta.screen.Contig26" becomes "Contig26".
+
+  -S  Sort input contigs in sequence order.  May be modified by -b.
+      May not be used with -a, -n, -o, or -z.
+
+  -t  Specify a filetype to be removed before adding ".qual" to create
+      the output quality filename.  See 'type_to_remove' above.  The
+      '-t' flag is not used unless '-q' is also specified.
+
+  -u  Use universal accession numbers (uaccno) as contig names for 454
+      reads instead of the rank_x_y form normally present in 454Reads
+      files.  May not be used with -p.
+
+  -v  Verbose mode - print out some statistics while running.
+
+  -x  Create new or append to existing (extend) output files.  May not
+      be used with -j.
+
+  -z  Sort input contigs by contig size.  May be modified by -b.  May not
+      be used with -a, -n, -o, or -S.
+
+
+ORDER_FILE INPUT FORMAT:
+
+Blank lines and comment lines (beginning with #) are allowed.  Each
+non-blank, non-comment, line of 'order_file' should name one input
+contig to be written to the output file.  The same input contig name
+may be used more than once.  This is useful for splitting an input
+contig into multiple output contigs.  Each input line may have multiple
+white-space separated fields.  Leading white-space is ignored.
+Trailing fields may be omitted to use the default values.  After any
+fields that are present, a trailing comment may be added.
+
+  - Input contig name.  This field is required.
+  - Direction (forward or reverse & complement).  If the field begins
+    with a C or an R (of either case), then that contig is reversed and
+    complemented before it is output, and the Output contig name
+    contains the Input contig name suffixed with '.comp' (or '.comp' is
+    removed), unless Output contig name is specified explicitly.  The
+    default is to output the contig in the forward direction.
+  - Beginning base of input contig.  The default beginning base is 1.  A
+    negative value indicates to start that many bases before the end of
+    the sequence.  (-1 means start at the last base;  -10 means start at
+    the 10th base counting from the end of the sequence, etc.)  A value
+    of zero or just a minus sign '-' is treated the same as base 1.  A
+    value longer than the input sequence is treated as a short contig
+    and ignored.  The value for Beginning base refers to base positions
+    in the original input contig before any base reversal and complement
+    operation that may occur.
+  - Length of sequence to be output.  A negative value indicates to end
+    that many bases before the end of the sequence.  (-1 means end 1
+    base before the last base;  -10 means end 10 bases before the last
+    base of the sequence, etc.)  If the length is omitted or zero or
+    out of range or less than Beginning base or just a minus sign '-',
+    then the end of the contig is used.
+  - Output contig name.  This field may be used to name the resulting
+    output contig.  If -j is specified, then this field is not used.
+    If this field is omitted, then an output contig name will be
+    constructed from the Input contig name.
+  - Trailing comment.  The comment begins with a # character and must
+    be at the beginning of the line or the # must be immediately
+    preceded by white space.  The # character and and all characters
+    after it are ignored until the end of the line.
+
+Assuming Contig1 is 1000 bases long, then each of the following lines
+specify that all 1000 bases of Contig1 should be output in the forward
+direction:
+
+Contig1				# All of Contig1
+Contig1              F		# All of Contig1 on the forward strand
+Contig1 F 1 1000		# The first 1000 bases (of 1000)
+    Contig1   F  1 1001		# The first 1001 bases (of only 1000)
+Contig1	F	1	0	# Start at base 1 through the last base
+Contig1	F	1		# Start at base 1 through the end
+Contig1	f	1	-	# Start at base 1 through the end
+Contig1	F 0 0 Contig1		# All of Contig1, named as Contig1
+Contig1	- - - Contig1		# All of Contig1, named as Contig1
+
+The following lines would specify as follows:
+
+Contig9				# All of Contig9
+Contig1	C			# All of Contig1 reversed and complemented
+Contig3	R	1	100	# First 100 bases of Contig3, then reversed
+				# and complemented
+Contig2	F	-100		# Last 100 bases of Contig2
+Contig7	F	51	-50	# All but the first and last 50 bases on
+				# the ends of Contig7
+Contig5	F	-100	-50	# The 50 bases ending 50 bases before the
+				# end of Contig5
+Contig2	f 501 1000 Contig2:501-1000	# Second 500 bases of Contig2.  The
+				# output contig is named "Contig2:501-1000"
+Contig4	f  123 334  Fred	# Bases 123-456 of Contig4.  The output
+				# contig is named "Fred"
+Contig6	r - - Contig6.revcomp	# All of Contig6 reversed and complemented
+				# and named "Contig6.revcomp"
+
+
+TABLE-OF-CONTENTS FILE OUTPUT FORMAT
+
+The Table-of-Contents file is produced only when -j is specified and is
+named "'fasta_output_file'.toc".  Two header lines (comments beginning
+with #) begin the file.  Each subsequent line of the table of contents
+file contains the following tab-separated fields:
+
+  - Contig name,
+  - Direction (F or R),
+  - Beginning base offset in the output contig (starting at 1),
+  - Output sequence length,
+  - Beginning base from input contig,
+  - Ending base from input contig, and
+  - Total input contig length.
+
+If the order file or the -r flag specifies to reverse and complement an
+input contig, then Direction is 'R' and the Contig name has '.comp'
+added (or removed) as a suffix.  "Beginning base from input contig" and
+"Ending base from input contig" refer to base positions before the
+reverse and complement, if Direction is 'R'.
+
+
+EXAMPLES:
+
+For the following examples, assume 'input.fa' and 'input.fa.qual'
+contain the following contigs:
+
+Contig1 (100 bases), Contig2 (200 bases), ... Contig101 (10100 bases)
+
+$ cat input.fa | sort_contigs -n - - > numeric.fa
+$ sort_contigs -n alpha.fa numeric.fa
+
+Either of the above lines reads the input fasta sequence file 'input.fa',
+sorts the contigs by contig number, and writes a new fasta sequence file,
+'numeric.fa'.  The output contig order is: Contig1, Contig2, ... Contig101.
+
+$ sort_contigs -z -b input.fa big_first
+
+sorts the contigs by decreasing contig size and writes a new fasta
+sequence file, 'big_first.fa'.  The output contig order is: Contig101,
+Contig100, ... Contig1.
+
+$ sort_contigs -r input.fa revcomp.fa
+
+reads the input fasta sequence file 'input.fa', reverses and complements
+all input contigs, and writes a new fasta sequence file, 'revcomp.fa'.
+The output contig order is unchanged from the input.
+
+$ sort_contigs -q -a input.fa alpha.fa
+
+reads the input fasta sequence file 'input.fa' and the input fasta
+quality file 'input.fa.qual', sorts the contigs in alphanumeric order,
+and writes a new fasta sequence file, 'alpha.fa' and a new fasta
+quality file, 'alpha.fa.qual'.  The output contig order is: Contig1,
+Contig10, Contig100, Contig101, Contig11, Contig12, ... Contig19,
+Contig2, Contig20, Contig21, ... Contig99.
+
+$ sort_contigs -v -o order input.fa ordered.fa
+
+reads the input fasta sequence file 'input.fa' and writes a new fasta
+sequence file, 'ordered.fa', containing the contigs or parts of contigs,
+as specified in the order_file 'order'.  The output contig order is as
+specified in the file 'order', and only the requested contigs are written.
+The Verbose flag (-v) causes some statistics to be written to Standard
+Output, including counts of contigs read, contigs written, and contigs
+not written to the output file, if any.
+
+$ sort_contigs -j X -n -q input.fa one_big_one.fa
+
+reads the input fasta sequence file 'input.fa' and the input fasta
+quality file 'input.fa.qual', sorts the contigs in numeric order,
+and writes all of the contigs as one big contig in a new fasta sequence
+file, 'one_big_one.fa' and a new fasta quality file, 'one_big_one.fa.qual'.
+The output contig order is: Contig1, Contig2, ... Contig101, but all of
+these contigs are contained in one long contig named the same as the input
+file, 'input.fa'.  Separating consecutive input contigs is a line of 50
+Xs in the sequence file (50 zero qualities in the quality file).
+A table of contents file, 'one_big_one.fa.toc', is also created listing
+all output contigs and their sizes and positions.
+
+$ sort_contigs -r input.fa long_ones.fa -m 2000
+
+reads the input fasta sequence file 'input.fa' and outputs a new fasta
+sequence file, 'long_ones.fa', containing only the contigs at least 2000
+bases long.  The output contig order is unchanged from the input.
+
+sort_contigs -Q 20 contigs.fa contigs20.fa
+
+reads the fasta sequence file "contigs.fa" (and does NOT use a fasta
+quality file "contigs.fa.qual" or "contigs.qual") and produces new
+fasta sequence and quality files named "contigs20.fa" and
+"contigs20.fa.qual".  All base quality values are set to 20.
+
+sort_contigs -Q s20 -t .fa contigs.fa contigs_sub20.fa
+
+reads the fasta sequence file "contigs.fa" and a fasta quality file
+"contigs.fa.qual" (or "contigs.qual") and produces new fasta sequence
+and quality files named "contigs_sub20.fa" and "contigs_sub20.qual".
+All base quality values are reduced by 20, but any qualities which
+would be negative are set to zero.  Note that the output quality file
+is "*.qual", not "*.fa.qual", because of the "-t .fa" option.
+
+sort_contigs -Q d2.5 contigs.fa contigs_div2.5.fna
+
+reads the fasta sequence file "contigs.fa" and the fasta quality file
+"contigs.fa.qual" (or "contigs.qual") and produces new fasta sequence
+and quality files named "contigs_div2.5.fna" and
+"contigs_div2.5.fna.qual".  All base quality values are divided by 2.5
+and rounded down to the next integer.
+
+sort_contigs -Q step100,50,25 contigs12.fna contigs_3step.fasta
+
+reads the fasta sequence file "contigs12.fna" and the fasta quality
+file "contigs12.fna.qual" (or "contigs12.qual") and produces new fasta
+sequence and quality files named "ccontigs_3step.fasta" and
+"contigs_3step.fasta.qual".  The first 100 base quality values are
+divided by 1;  the next 50 are divided by 2;  the next 25 are divided
+by 3;  the remaining base qualities are divided by 4. The resulting
+quality scores are all rounded down to the next lowest integer.
+
+sort_contigs -Q slope10,5,0,4,2 contigs13.fna contigs_5slope.fasta
+
+reads the fasta sequence file "contigs13.fna" and the fasta quality
+file "contigs13.fna.qual" (or "contigs13.qual") and produces new fasta
+sequence and quality files named "ccontigs_3step.fasta" and
+"contigs_3step.fasta.qual".  The base quality scores are divided by:
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  1.2, 1.4, 1.6, 1.8, 2.0,
+  (note the jump from 2 because of the zero)
+  3.25, 3.5, 3.75, 4,
+  4.5, 5,
+  5, 5, ...
+The resulting quality scores are all rounded down to the next lowest integer.
+
+
+DATE LAST MODIFIED: August 7, 2009
+

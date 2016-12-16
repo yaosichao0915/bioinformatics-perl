@@ -1,0 +1,37 @@
+LengthSort
+
+Current version 1.1
+
+Released under GNU General Public License version 3
+
+Murray Cox
+Massey University Palmerston North, New Zealand
+Email contact <m.p.cox@massey.ac.nz>
+September 2010
+
+DESCRIPTION:
+
+LengthSort is a UNIX-based Perl script that sorts dynamically trimmed reads into files based on a user-defined length cutoff.  Single-end data is sorted into reads that pass the length threshold (*.single) and reads that are smaller than the threshold (*.discard).  Paired-end data is sorted into two useable paired read files (*.paired1 and *.paired2), usable single reads (*.single) and non-usable reads (*.discard).  
+
+
+USAGE:
+
+perl LengthSort.pl one single-end or two paired-end FASTQ files [-l|length 25]
+
+Optional command line flags:
+-l|length       length cutoff [defaults to 25 nucleotides]
+
+
+OUTPUT:
+
+Either two output files (single-end data) or four output files (paired-end data) are created, named as the original (forward) FASTQ file with the following suffices appended.
+
+*.single - Reads that are larger than or equal to the length cutoff.  (If paired-end data is being analyzed, these are reads which fulfil the length requirement, while their paired read does not).
+
+*.discard - Reads that are smaller than the length cutoff. 
+
+Paired-end data only:
+
+*.paired1 - Forward reads that are larger than or equal to the length cutoff. The reverse read pair is also larger than the length cutoff and is present in the *.paired2 file.
+
+*.paired2 - Reverse reads that are larger than or equal to the length cutoff. The forward read pair is also larger than the length cutoff and is present in the *.paired1 file.
